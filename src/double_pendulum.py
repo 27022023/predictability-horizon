@@ -10,20 +10,15 @@ import os
 os.makedirs("plots", exist_ok=True)
 
 # ============================================
-# PHYSICAL PARAMETERS
+# DOUBLE PENDULUM PARAMETERS
 # ============================================
 
 m1 = 1.0
 m2 = 1.0
-
 L1 = 1.0
 L2 = 1.0
-
 g = 9.81
 
-# ============================================
-# DOUBLE PENDULUM EQUATIONS
-# ============================================
 
 def double_pendulum(t, y):
 
@@ -47,7 +42,8 @@ def double_pendulum(t, y):
 
     alpha2 = (
         -m2 * L2 * omega2**2 * np.sin(delta) * np.cos(delta)
-        + (m1 + m2) * (
+        + (m1 + m2)
+        * (
             g * np.sin(theta1) * np.cos(delta)
             - L1 * omega1**2 * np.sin(delta)
             - g * np.sin(theta2)
@@ -56,19 +52,20 @@ def double_pendulum(t, y):
 
     return [omega1, alpha1, omega2, alpha2]
 
+
 # ============================================
 # INITIAL CONDITIONS
 # ============================================
 
 initial_A = [
-    np.radians(30.0),
+    np.radians(30.000000),
     0.0,
     np.radians(60.0),
     0.0
 ]
 
 initial_B = [
-    np.radians(30.000001),
+    np.radians(30.0001),
     0.0,
     np.radians(60.0),
     0.0
@@ -79,7 +76,7 @@ initial_B = [
 # ============================================
 
 t_start = 0
-t_end = 20
+t_end = 100
 num_points = 10000
 
 t_eval = np.linspace(
@@ -89,7 +86,7 @@ t_eval = np.linspace(
 )
 
 # ============================================
-# RUN A
+# RUN SIMULATIONS
 # ============================================
 
 solution_A = solve_ivp(
@@ -101,10 +98,6 @@ solution_A = solve_ivp(
     atol=1e-12
 )
 
-# ============================================
-# RUN B
-# ============================================
-
 solution_B = solve_ivp(
     double_pendulum,
     [t_start, t_end],
@@ -115,7 +108,7 @@ solution_B = solve_ivp(
 )
 
 # ============================================
-# EXTRACT DATA
+# DIVERGENCE
 # ============================================
 
 theta1_A = solution_A.y[0]
@@ -124,21 +117,18 @@ theta2_A = solution_A.y[2]
 theta1_B = solution_B.y[0]
 theta2_B = solution_B.y[2]
 
-# ============================================
-# DIVERGENCE
-# ============================================
-
 difference = np.sqrt(
     (theta1_A - theta1_B) ** 2
-    +
-    (theta2_A - theta2_B) ** 2
+    + (theta2_A - theta2_B) ** 2
 )
+
+print("Maximum divergence:", np.max(difference))
 
 # ============================================
 # PREDICTABILITY HORIZON
 # ============================================
 
-threshold = 0.1
+threshold = 0.01
 
 crossings = np.where(
     difference >= threshold
@@ -149,16 +139,14 @@ if len(crossings) > 0:
     Tp = t_eval[crossings[0]]
 
     print(
-        f"Predictability Horizon = {Tp:.3f} s"
+        f"Predictability Horizon = {Tp:.3f} seconds"
     )
 
 else:
 
     Tp = None
 
-    print(
-        "Threshold not reached."
-    )
+    print("Threshold not reached.")
 
 # ============================================
 # LYAPUNOV ESTIMATE
@@ -166,10 +154,10 @@ else:
 
 valid = difference > 0
 
-times = t_eval[valid]
 log_diff = np.log(difference[valid])
+times = t_eval[valid]
 
-fit_end = 1500
+fit_end = min(1500, len(times))
 
 coeffs = np.polyfit(
     times[:fit_end],
@@ -184,28 +172,10 @@ print(
 )
 
 # ============================================
-# THEORETICAL HORIZON
+# TRAJECTORY PLOT
 # ============================================
 
-if Tp is not None:
-
-    delta0 = difference[0]
-
-    Tp_theory = (
-        1 / lambda_est
-    ) * np.log(
-        threshold / delta0
-    )
-
-    print(
-        f"Theoretical Horizon = {Tp_theory:.3f} s"
-    )
-
-# ============================================
-# PLOT 1
-# ============================================
-
-plt.figure(figsize=(10,5))
+plt.figure(figsize=(10, 5))
 
 plt.plot(
     t_eval,
@@ -220,90 +190,46 @@ plt.plot(
     label="System B"
 )
 
+plt.title("Trajectory Comparison")
 plt.xlabel("Time (s)")
 plt.ylabel("Angle (degrees)")
-plt.title(
-    "Two Nearly Identical Double Pendulums"
-)
-
-plt.legend()
 plt.grid(alpha=0.3)
+plt.legend()
 
-plt.savefig(
-    "plots/trajectory.png",
-    dpi=300,
-    bbox_inches="tight"
-)
+plt.savefig("plots/trajectory.png")
+plt.close()
 
 # ============================================
-# PLOT 2
+# DIVERGENCE PLOT
 # ============================================
 
-plt.figure(figsize=(10,5))
+plt.figure(figsize=(10, 5))
 
 plt.semilogy(
     t_eval,
     difference,
-    color="crimson",
-    label="Separation"
+    color="crimson"
 )
 
 plt.axhline(
     threshold,
-    linestyle="--",
-    color="black"
+    color="black",
+    linestyle="--"
 )
 
 if Tp is not None:
-
     plt.axvline(
         Tp,
-        linestyle=":",
         color="blue",
-        label=f"Horizon = {Tp:.2f}s"
+        linestyle=":"
     )
 
+plt.title("Growth of Uncertainty")
 plt.xlabel("Time (s)")
 plt.ylabel("Angular Separation")
-
-plt.title(
-    "Predictability Horizon"
-)
-
-plt.legend()
-
 plt.grid(alpha=0.3)
 
-plt.savefig(
-    "plots/divergence.png",
-    dpi=300,
-    bbox_inches="tight"
-)
+plt.savefig("plots/divergence.png")
+plt.close()
 
-# ============================================
-# PLOT 3
-# ============================================
-
-plt.figure(figsize=(10,5))
-
-plt.plot(
-    times[:fit_end],
-    log_diff[:fit_end]
-)
-
-plt.xlabel("Time (s)")
-plt.ylabel("log(Divergence)")
-
-plt.title(
-    "Lyapunov Exponent Estimation"
-)
-
-plt.grid(alpha=0.3)
-
-plt.savefig(
-    "plots/lyapunov.png",
-    dpi=300,
-    bbox_inches="tight"
-)
-
-plt.show()
+print("Plots saved in /plots")
