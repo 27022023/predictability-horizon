@@ -1,8 +1,38 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-  <title>Predictability Horizon</title>
+<title>Predictability Horizon</title>
+
+<style>
+
+body{
+    background:#050510;
+    color:white;
+    font-family:Arial;
+    text-align:center;
+    padding:40px;
+}
+
+h1{
+    color:#42a5ff;
+    font-size:60px;
+}
+
+.card{
+    background:#121225;
+    padding:20px;
+    margin:20px auto;
+    width:80%;
+    border-radius:20px;
+}
+
+img{
+    width:90%;
+    max-width:900px;
+    border-radius:15px;
+}
+
+</style>
 </head>
 
 <body>
@@ -10,21 +40,36 @@
 <h1>Predictability Horizon</h1>
 
 <p>
-Investigating when a chaotic physical system becomes
-effectively unpredictable.
+Investigating the limits of prediction in chaotic systems.
 </p>
+
+<div class="card">
 
 <h2>Trajectory Comparison</h2>
 
 plots/trajectory.png
 
-<h2>Growth of Uncertainty</h2>
+</div>
+
+<div class="card">
+
+<h2>Divergence Growth</h2>
 
 plots/divergence.png
 
-<h2>Lyapunov Analysis</h2>
+</div>
 
-plots/lyapunov.png
+<div class="card">
+
+<h2>Main Equation</h2>
+
+<p>
+
+Tp = (1 / λ) × ln(Δc / Δ0)
+
+</p>
+
+</div>
 
 </body>
 </html>
